@@ -13,8 +13,6 @@ def get_timestamp():
     portugal_tz = timezone("Europe/Lisbon")
     return portugal_tz.localize(datetime.now())
 
-def epoch2utc(timestamp):
-    return datetime.fromtimestamp(timestamp, pytz.utc)
 
 def create_entry(measurement, tags, timestamp, fields):
     """

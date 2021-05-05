@@ -28,13 +28,13 @@ def wirelessUsers_data(token):
             ## loggar para um ficheiro a dizer que a api parking deu erro para posterior investigação
             ## a defenir
 
-    return [{"Timestamp" : epoch2utc(get_timestamp().timestamp())}, number_users]
+    return [{"Timestamp" : get_timestamp()}, number_users]
 
 def wirelessUsers_format_influx(wirelessUsers):
     db_entrys = []
     timestamp = wirelessUsers.pop(0)["Timestamp"]
     for wifi in wirelessUsers[0]:
-        db_entrys.append(create_entry("wifiusr", {"Nome": wifi}, str(epoch2utc(timestamp)), {"wifiCount": wirelessUsers[0][wifi]}))
+        db_entrys.append(create_entry("wifiusr", {"Nome": wifi}, str(timestamp), {"wifiCount": wirelessUsers[0][wifi]}))
     return db_entrys
     
 

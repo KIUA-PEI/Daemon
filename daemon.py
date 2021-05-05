@@ -9,10 +9,12 @@ import time
 import json
 import kafka
 import requests
+import socket
 
 from consts import *
 from datetime import datetime
 from kafka import KafkaProducer
+from kafka import BrokerConnection
 from influxdb import InfluxDBClient
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -21,42 +23,67 @@ from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
 
 # jobs
-def five_min_job():
-    print("this job runs every 5 sec")
-
-def thirty_min_job(producer, influx, token, keys):
+def five_min_job(producer, influx, keys):
+    print("\n-------------5 min job---------------")
     # parking data
     parking = parking_data()
     keys["parking"] = keys["parking"] + 1
-    try:
-        producer.send("parking", value={"PARK"+str(keys["parking"]) : parking})
 
-        # parking data influx formated
-        parking = parking_format_influx(parking)
+    if kafkaConnection():
+        if producer == "":
+            producer = ProducerStart()
+        try:
+            producer.send("parking", value={"PARK"+str(keys["parking"]) : parking})
+            print("sended parking to kafka!")
+        except:
+            print("producer is bad, or not connected...")
 
-        jsonb = []
-        for park in parking:
-            # print(park[0])
-            jsonb.append(park[0])
+    # parking data influx formated
+    parking = parking_format_influx(parking)
+    parking = [park[0] for park in parking]
 
+    print("sended parking to Influx!")
+    # print(parking)
+    # influx.write_points(parking, database="Metrics")
 
-        # print(parking)
-
-        influx.write_points(jsonb, database="Metrics")
+def thirty_min_job(producer, influx, token, keys):
+    print("\n-------------30 min job-------------")
         
+    # number of wireless users data
+    wireless_users = wirelessUsers_data(token)
+    keys["wirelessUsers"] = keys["wirelessUsers"] + 1
+    if kafkaConnection():
+        if producer == "":
+            producer = ProducerStart()
+        try:
+            producer.send("wifiusr", value={"WIFIUSR"+str(keys["wirelessUsers"]) : wireless_users})
+            print("sended wirelessUseres to kafka!")
+        except:
+            print("producer is bad, or not connected...")
 
+    # wifiuseres data influx formated
+    wireless_users = wirelessUsers_format_influx(wireless_users)
+    print("sended wirelessUseres to Influx!")
+    # print(json.dumps(wireless_users, indent=4))
+    # influx.write_points(wireless_users, database="Metrics")
 
-        # number of wireless users data
-        wireless_users = wirelessUsers_data(token)
-        print(wireless_users)
-        keys["wirelessUsers"] = keys["wirelessUsers"] + 1
-        producer.send("wifiusr", value={"WIFIUSR"+str(keys["wirelessUsers"]) : wireless_users})
+def kafkaConnection():
+    # test connection
+    conn = BrokerConnection("13.69.49.187", 9092, socket.AF_INET)
+    timeout = time.time() + 1
+    while time.time() < timeout:
+        conn.connect()
+        if conn.connected():
+            break
+    if conn.connected():
+        print("kafka is up!")
+    else:
+        print("kafka is down!")
+    return conn.connected()
 
-        print(wireless_users)
-
-        influx.write_points(wireless_users, database="Metrics")
-    except:
-        print("deu coco")
+def ProducerStart():
+    assert kafkaConnection()
+    return KafkaProducer(bootstrap_servers=['13.69.49.187:9092'], value_serializer=lambda x: json.dumps(x, indent=4, sort_keys=True, default=str).encode('utf-8'))
 
 
 # def launch_daemon(url,key=None):
@@ -72,26 +99,27 @@ def main():
     }
     scheduler.configure(job_defaults=job_defaults)
 
-    # start Kafka Python Client
-    try:
-        producer = KafkaProducer(bootstrap_servers=['13.69.49.187:9092'], value_serializer=lambda x: json.dumps(x, indent=4, sort_keys=True, default=str).encode('utf-8'))
+    # get primecoreAPI access token
+    token = get_acess_token()
+
+    # test connection
+    conn = kafkaConnection()
+
+    producer = ""
+    if conn:
+        # start Kafka Python Client
+        producer = ProducerStart()()
 
     # start influxDBClient
-        influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
+    influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
 
-        # get primecoreAPI access token
-        token = get_acess_token()
-
-        # add jobs
-        scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
-        scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=30, id="30minjob", next_run_time=datetime.now())
-
-    except:
-        #kafka down
-        print("kafka down!")
+    # add jobs
+    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
+    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=30, id="30minjob", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
+
 
     try:
         while True:
