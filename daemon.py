@@ -21,16 +21,10 @@ from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
 
 # jobs
-def hour_job():
-    print("this job runs every 1 hour")
+def five_min_job():
+    print("this job runs every 5 sec")
 
-def ten_sec_job(producer):
-    pass
-
-def thirty_sec_job():
-    print("this job runs every 30 sec")
-
-def twenty_min_job(producer, influx, token, keys):
+def thirty_min_job(producer, influx, token, keys):
     # parking data
     parking = parking_data()
     keys["parking"] = keys["parking"] + 1
@@ -85,21 +79,16 @@ def main():
     # start influxDBClient
         influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
 
-        # create influx user and database
-        # influx.create_user("daemon", "daemon_1234", admin=True)
-        # influx.create_database("Metrics")
-
         # get primecoreAPI access token
         token = get_acess_token()
 
         # add jobs
-        scheduler.add_job(hour_job, trigger="interval", hours=1, id="1hourjob")
-        scheduler.add_job(ten_sec_job, trigger="interval", args=[producer], seconds=10, id="10secjob")
-        scheduler.add_job(thirty_sec_job, trigger="interval", seconds=30, id="30secjob")
-        scheduler.add_job(twenty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=20, id="20minjob", next_run_time=datetime.now())
+        scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
+        scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=30, id="30minjob", next_run_time=datetime.now())
 
     except:
-        print("deu coco2")
+        #kafka down
+        print("kafka down!")
 
     # start the scheduler
     scheduler.start()
