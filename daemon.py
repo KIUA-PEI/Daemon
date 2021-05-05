@@ -1,10 +1,3 @@
-#   tentar automatizar o daemon
-#   ter um url como arg
-#   dar como argumento o token com opção de null
-#   dar launch a esse daemon e 
-#   enviar a informação para a database e katka
-#   permitir ter uma lista de (url,key)'s para dar launch
-import requests
 import time
 import json
 import kafka
@@ -24,7 +17,6 @@ from metrics import wirelessUsers_data, wirelessUsers_format_influx
 
 # jobs
 def five_min_job(producer, influx, keys):
-    print("\n-------------5 min job---------------")
     # parking data
     parking = parking_data()
     keys["parking"] = keys["parking"] + 1
@@ -34,21 +26,15 @@ def five_min_job(producer, influx, keys):
             producer = ProducerStart()
         try:
             producer.send("parking", value={"PARK"+str(keys["parking"]) : parking})
-            print("sended parking to kafka!")
         except:
             print("producer is bad, or not connected...")
 
     # parking data influx formated
     parking = parking_format_influx(parking)
     parking = [park[0] for park in parking]
-
-    print("sended parking to Influx!")
-    # print(parking)
-    # influx.write_points(parking, database="Metrics")
+    influx.write_points(parking, database="Metrics")
 
 def thirty_min_job(producer, influx, token, keys):
-    print("\n-------------30 min job-------------")
-        
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
     keys["wirelessUsers"] = keys["wirelessUsers"] + 1
@@ -57,36 +43,28 @@ def thirty_min_job(producer, influx, token, keys):
             producer = ProducerStart()
         try:
             producer.send("wifiusr", value={"WIFIUSR"+str(keys["wirelessUsers"]) : wireless_users})
-            print("sended wirelessUseres to kafka!")
         except:
             print("producer is bad, or not connected...")
 
     # wifiuseres data influx formated
     wireless_users = wirelessUsers_format_influx(wireless_users)
-    print("sended wirelessUseres to Influx!")
-    # print(json.dumps(wireless_users, indent=4))
-    # influx.write_points(wireless_users, database="Metrics")
+    wireless_users = [w[0] for w in wireless_users]
+    influx.write_points(wireless_users, database="Metrics")
 
 def kafkaConnection():
-    # test connection
+    # test connection to kafka
     conn = BrokerConnection("13.69.49.187", 9092, socket.AF_INET)
     timeout = time.time() + 1
     while time.time() < timeout:
         conn.connect()
         if conn.connected():
             break
-    if conn.connected():
-        print("kafka is up!")
-    else:
-        print("kafka is down!")
     return conn.connected()
 
 def ProducerStart():
     assert kafkaConnection()
     return KafkaProducer(bootstrap_servers=['13.69.49.187:9092'], value_serializer=lambda x: json.dumps(x, indent=4, sort_keys=True, default=str).encode('utf-8'))
 
-
-# def launch_daemon(url,key=None):
 def main():
     print("runs main")
     # start scheduler
@@ -102,7 +80,7 @@ def main():
     # get primecoreAPI access token
     token = get_acess_token()
 
-    # test connection
+    # test connection to kafka
     conn = kafkaConnection()
 
     producer = ""
@@ -111,7 +89,7 @@ def main():
         producer = ProducerStart()()
 
     # start influxDBClient
-    influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
+    influx = InfluxDBClient(host='40.68.96.164', port=8086, username="peikpis", password="peikpis_2021")
 
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
@@ -119,7 +97,6 @@ def main():
 
     # start the scheduler
     scheduler.start()
-
 
     try:
         while True:
@@ -132,21 +109,3 @@ def main():
 if __name__=="__main__":
     main()
 
-# json_body = [
-#     {
-#         "measurement": "cpu_load_short",
-#         "tags": {
-#             "host": "server01",
-#             "region": "us-west"
-#         },
-#         "time": "2009-11-10T23:00:00Z",
-#         "fields": {
-#             "Float_value": 0.64,
-#             "Int_value": 3,
-#             "String_value": "Text",
-#             "Bool_value": True
-#         }
-#     }
-# ]
-
-# launch_daemon("http://services.web.ua.pt/parques/parques")

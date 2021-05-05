@@ -23,5 +23,7 @@ def parking_format_influx(parking):
     db_entrys = []
     timestamp = parking.pop(0)["Timestamp"]
     for park in parking:
-        db_entrys.append(create_entry("parking", {"Nome": park["Nome"]}, str(timestamp), {"Ocupado" : park["Ocupado"], "Livre" : park["Livre"], "Capacidade" : park["Capacidade"]}))
+        db_entrys.append(create_entry("parking", {"Nome": park["Nome"]}, str(epoch2utc(timestamp)), {"Ocupado" : park["Ocupado"], "Livre" : park["Livre"], "Capacidade" : park["Capacidade"]}))
+    
     return db_entrys
+
