@@ -1,10 +1,3 @@
-#   tentar automatizar o daemon
-#   ter um url como arg
-#   dar como argumento o token com opção de null
-#   dar launch a esse daemon e 
-#   enviar a informação para a database e katka
-#   permitir ter uma lista de (url,key)'s para dar launch
-import requests
 import time
 import json
 import kafka
@@ -23,17 +16,16 @@ from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
 
 # jobs
-def five_min_job(producer, influx, keys):
+def five_min_job(producer, influx):
     print("\n-------------5 min job---------------")
     # parking data
     parking = parking_data()
-    keys["parking"] = keys["parking"] + 1
 
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("parking", value={"PARK"+str(keys["parking"]) : parking})
+            producer.send("parking", value={"PARK" : parking})
             print("sended parking to kafka!")
         except:
             print("producer is bad, or not connected...")
@@ -46,17 +38,16 @@ def five_min_job(producer, influx, keys):
     # print(parking)
     # influx.write_points(parking, database="Metrics")
 
-def thirty_min_job(producer, influx, token, keys):
+def thirty_min_job(producer, influx, token):
     print("\n-------------30 min job-------------")
         
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
-    keys["wirelessUsers"] = keys["wirelessUsers"] + 1
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("wifiusr", value={"WIFIUSR"+str(keys["wirelessUsers"]) : wireless_users})
+            producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
             print("sended wirelessUseres to kafka!")
         except:
             print("producer is bad, or not connected...")
@@ -114,8 +105,8 @@ def main():
     influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
 
     # add jobs
-    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
-    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=30, id="30minjob", next_run_time=datetime.now())
+    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
+    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
@@ -131,22 +122,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-# json_body = [
-#     {
-#         "measurement": "cpu_load_short",
-#         "tags": {
-#             "host": "server01",
-#             "region": "us-west"
-#         },
-#         "time": "2009-11-10T23:00:00Z",
-#         "fields": {
-#             "Float_value": 0.64,
-#             "Int_value": 3,
-#             "String_value": "Text",
-#             "Bool_value": True
-#         }
-#     }
-# ]
-
-# launch_daemon("http://services.web.ua.pt/parques/parques")
