@@ -3,8 +3,9 @@ import json
 import kafka
 import requests
 import socket
+import pprint as p
 
-from consts import *
+
 from datetime import datetime
 from kafka import KafkaProducer
 from kafka import BrokerConnection
@@ -14,19 +15,22 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from metrics import get_acess_token
 from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
+from metrics import num_rogue_ap_data
 
 # jobs
 def five_min_job(producer, influx):
     print("\n-------------5 min job---------------")
     # parking data
     parking = parking_data()
+    p.pprint({"PARK":parking})
 
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("parking", value={"PARK" : parking})
-            print("sended parking to kafka!")
+            # producer.send("parking", value={"PARK" : parking})
+            print("sended parking to kafka:")
+            print({"PARK":parking})
         except:
             print("producer is bad, or not connected...")
 
@@ -40,23 +44,32 @@ def five_min_job(producer, influx):
 
 def thirty_min_job(producer, influx, token):
     print("\n-------------30 min job-------------")
-        
+    
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
+    p.pprint({"WIFIUSR" : wireless_users})
+
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
-            print("sended wirelessUseres to kafka!")
+            # producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
+            print("sended wirelessUseres to kafka:")
+            print({"WIFIUSR" : wireless_users})
+
         except:
             print("producer is bad, or not connected...")
 
     # wifiuseres data influx formated
-    wireless_users = wirelessUsers_format_influx(wireless_users)
+    # wireless_users = wirelessUsers_format_influx(wireless_users)
     print("sended wirelessUseres to Influx!")
-    # print(json.dumps(wireless_users, indent=4))
     # influx.write_points(wireless_users, database="Metrics")
+
+def seven_day_job(influx, token):
+    num_rogue_ap = num_rogue_ap_data(token)
+
+
+
 
 def kafkaConnection():
     # test connection
@@ -107,6 +120,7 @@ def main():
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
     scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
+    scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
