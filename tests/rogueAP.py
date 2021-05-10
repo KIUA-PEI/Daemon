@@ -8,4 +8,6 @@ from metrics import get_acess_token
 
 token = get_acess_token()
 
-num_rogue_ap_data(token)
+rogue_ap_last_week = num_rogue_ap_data(token)
+
+print(rogue_ap_last_week)

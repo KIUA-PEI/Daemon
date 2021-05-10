@@ -1,11 +1,17 @@
 import requests
 import json
+import datetime as dt
 
 from .consts import *
 from .util import *
 from datetime import datetime, timedelta
 
+
+#temp
+import pprint as p
+
 def num_rogue_ap_data(token, week_ago=None):
+    num_rogue_ap = 0
     if week_ago == None:
         week_ago = datetime.now() - timedelta(days=7)
 
@@ -13,13 +19,33 @@ def num_rogue_ap_data(token, week_ago=None):
     
     if r.status_code == 401:
         token = get_acess_token()
-        num_rogue_ap_data(token, week_ago)
+        return num_rogue_ap_data(token, week_ago)
     
     elif r.status_code == 200:
         num_entrys = json.loads(r.text)["count"]
         past_week_ago = False
 
-        # while not past_week_ago:
-        #     num_entrys = num_entrys - 100
-        #     r = requests.get("https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/RogueAccessPointAlarm?firstResult="+str(num_entrys), headers={'Authorization': token})
-        #     # do a loop calling a function to make the consecutive requests
+        while not past_week_ago:
+            print("teste")
+            num_entrys = num_entrys - 100
+            print("https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/RogueAccessPointAlarm?maxResult=100&firstResult="+str(num_entrys))
+            r = requests.get("https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/RogueAccessPointAlarm?maxResult=100&firstResult="+str(num_entrys), headers={'Authorization': token})
+            print(r.status_code)
+            
+            if r.status_code == 401:
+                token = get_acess_token()
+                return num_rogue_ap_data(token, week_ago)
+
+            if r.status_code == 200:
+                data = json.loads(r.text)
+                for rogue in data["rogueAccessPointAlarms"]:
+                    time = dt.datetime.strptime(rogue["timeStamp"], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    print("time > week_ago: "+str(time > week_ago))
+                    if time > week_ago:
+                        num_rogue_ap = num_rogue_ap + 1 if rogue["severity"] == "MINOR" or rogue["severity"] == "CRITICAL" else num_rogue_ap
+                    else:
+                        past_week_ago = True
+    return num_rogue_ap
+                    
+
+

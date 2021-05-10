@@ -65,8 +65,8 @@ def thirty_min_job(producer, influx, token):
     print("sended wirelessUseres to Influx!")
     # influx.write_points(wireless_users, database="Metrics")
 
-def seven_day_job(influx, token):
-    num_rogue_ap = num_rogue_ap_data(token)
+# def seven_day_job(influx, token):
+#     num_rogue_ap = num_rogue_ap_data(token)
 
 
 
@@ -120,7 +120,7 @@ def main():
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
     scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
-    scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
+    # scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
