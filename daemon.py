@@ -3,8 +3,9 @@ import json
 import kafka
 import requests
 import socket
+import pprint as p
 
-from consts import *
+
 from datetime import datetime
 from kafka import KafkaProducer
 from kafka import BrokerConnection
@@ -16,43 +17,42 @@ from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
 
 # jobs
-def five_min_job(producer, influx, keys):
+def five_min_job(producer, influx):
     # parking data
     parking = parking_data()
-    keys["parking"] = keys["parking"] + 1
 
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("parking", value={"PARK"+str(keys["parking"]) : parking})
+            producer.send("parking", value={"PARK" : parking})
         except:
             print("producer is bad, or not connected...")
 
     # parking data influx formated
     parking = parking_format_influx(parking)
     parking = [park[0] for park in parking]
-    influx.write_points(parking, database="Metrics")
 
-def thirty_min_job(producer, influx, token, keys):
+    # influx.write_points(parking, database="Metrics")
+
+def thirty_min_job(producer, influx, token):
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
-    keys["wirelessUsers"] = keys["wirelessUsers"] + 1
+
     if kafkaConnection():
         if producer == "":
             producer = ProducerStart()
         try:
-            producer.send("wifiusr", value={"WIFIUSR"+str(keys["wirelessUsers"]) : wireless_users})
+            producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
         except:
             print("producer is bad, or not connected...")
 
     # wifiuseres data influx formated
     wireless_users = wirelessUsers_format_influx(wireless_users)
-    wireless_users = [w[0] for w in wireless_users]
-    influx.write_points(wireless_users, database="Metrics")
+    # influx.write_points(wireless_users, database="Metrics")
 
 def kafkaConnection():
-    # test connection to kafka
+    # test connection
     conn = BrokerConnection("13.69.49.187", 9092, socket.AF_INET)
     timeout = time.time() + 1
     while time.time() < timeout:
@@ -80,7 +80,7 @@ def main():
     # get primecoreAPI access token
     token = get_acess_token()
 
-    # test connection to kafka
+    # test connection
     conn = kafkaConnection()
 
     producer = ""
@@ -89,11 +89,11 @@ def main():
         producer = ProducerStart()()
 
     # start influxDBClient
-    influx = InfluxDBClient(host='40.68.96.164', port=8086, username="peikpis", password="peikpis_2021")
+    influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
 
     # add jobs
-    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx, KAFKAKEYS], minutes=5, id="5minjob", next_run_time=datetime.now())
-    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token, KAFKAKEYS], minutes=30, id="30minjob", next_run_time=datetime.now())
+    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
+    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
@@ -108,4 +108,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
