@@ -28,7 +28,7 @@ def wirelessUsers_data(token):
             ## loggar para um ficheiro a dizer que a api parking deu erro para posterior investigação
             ## a defenir
 
-    return [{"Timestamp" : get_timestamp()}, number_users]
+    return [{"Timestamp" : str(get_timestamp())}, number_users]
 
 def wirelessUsers_format_influx(wirelessUsers):
     db_entrys = []

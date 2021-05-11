@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime as dt
 from .consts import *
 from .util import *
 
@@ -22,6 +23,7 @@ def parking_format_influx(parking):
     """gets a list of json like database entrys"""
     db_entrys = []
     timestamp = parking.pop(0)["Timestamp"]
+    time = dt.fromtimestamp(timestamp).isoformat()
     for park in parking:
-        db_entrys.append(create_entry("parking", {"Nome": park["Nome"]}, str(timestamp), {"Ocupado" : park["Ocupado"], "Livre" : park["Livre"], "Capacidade" : park["Capacidade"]}))
+        db_entrys.append(create_entry("parking", {"Nome": park["Nome"]}, str(time), {"Ocupado" : park["Ocupado"], "Livre" : park["Livre"], "Capacidade" : park["Capacidade"]}))
     return db_entrys

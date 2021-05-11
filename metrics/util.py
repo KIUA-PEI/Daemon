@@ -11,7 +11,7 @@ def get_acess_token():
 
 def get_timestamp():
     portugal_tz = timezone("Europe/Lisbon")
-    return portugal_tz.localize(datetime.now())
+    return portugal_tz.localize(datetime.now()).isoformat()
 
 
 def create_entry(measurement, tags, timestamp, fields):
