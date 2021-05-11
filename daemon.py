@@ -40,7 +40,7 @@ def five_min_job(producer, influx):
 
     print("sended parking to Influx!")
     p.pprint(parking)
-    # influx.write_points(parking, database="Metrics")
+    influx.write_points(parking, database="Metrics")
 
 def thirty_min_job(producer, influx, token):
     print("\n-------------30 min job-------------")
@@ -62,9 +62,10 @@ def thirty_min_job(producer, influx, token):
 
     # wifiuseres data influx formated
     wireless_users = wirelessUsers_format_influx(wireless_users)
+    wireless_users = [wire[0] for wire in wireless_users]
     print("\nsended wirelessUseres to Influx:")
     p.pprint(wireless_users)
-    # influx.write_points(wireless_users, database="Metrics")
+    influx.write_points(wireless_users, database="Metrics")
 
 # def seven_day_job(influx, token):
 #     num_rogue_ap = num_rogue_ap_data(token)
