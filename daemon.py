@@ -49,6 +49,7 @@ def thirty_min_job(producer, influx, token):
 
     # wifiuseres data influx formated
     wireless_users = wirelessUsers_format_influx(wireless_users)
+    wireless_users = [wire[0] for wire in wireless_users]
     influx.write_points(wireless_users, database="Metrics")
 
 def kafkaConnection():
