@@ -117,7 +117,7 @@ def main():
         producer = ProducerStart()()
 
     # start influxDBClient
-    influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
+    influx = InfluxDBClient(host='127.0.0.1', port=8086, username="daemon", password="daemon_1234")
 
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
