@@ -32,7 +32,6 @@ def five_min_job(producer, influx):
     # parking data influx formated
     parking = parking_format_influx(parking)
     parking = [park[0] for park in parking]
-
     influx.write_points(parking, database="Metrics")
 
 def thirty_min_job(producer, influx, token):
@@ -66,8 +65,9 @@ def ProducerStart():
     assert kafkaConnection()
     return KafkaProducer(bootstrap_servers=['13.69.49.187:9092'], value_serializer=lambda x: json.dumps(x, indent=4, sort_keys=True, default=str).encode('utf-8'))
 
+
+# def launch_daemon(url,key=None):
 def main():
-    print("runs main")
     # start scheduler
     scheduler = BackgroundScheduler()
     
@@ -95,9 +95,11 @@ def main():
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
     scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
+    # scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
 
     # start the scheduler
     scheduler.start()
+
 
     try:
         while True:
