@@ -5,6 +5,7 @@ from .util import *
 
 
 def parking_data():
+    parking = ""
     r = requests.get("http://services.web.ua.pt/parques/parques")
     # print(r.json())
     if r.status_code == 200:

@@ -87,7 +87,7 @@ def main():
     producer = ""
     if conn:
         # start Kafka Python Client
-        producer = ProducerStart()()
+        producer = ProducerStart()
 
     # start influxDBClient
     influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
