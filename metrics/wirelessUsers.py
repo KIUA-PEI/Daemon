@@ -4,16 +4,16 @@ from .consts import *
 from .util import *
 
 def wirelessUsers_data(token):
+    """
+    Returns data on response.status_code == 200
+
+    returns None on response.status_code == 400
+    """
     number_users = WIFIUSERS
     for i in range(8):
         r = requests.get('https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/AccessPoint?maxResult=1000&firstResult='+str(i*100), headers={'Authorization': token})
         
-        if r.status_code == 401:
-            token = get_acess_token()
-            wirelessUsers_data(token)
-            break
-        
-        elif r.status_code == 200:
+        if r.status_code == 200:
             data = json.loads(r.text)
             for ap in data["accessPoints"]:
                 for dep in DEP:
@@ -22,11 +22,14 @@ def wirelessUsers_data(token):
                             number_users[dep] = number_users[dep] + ap["clientCount"]
                     except Exception:
                         print("Error parsing...")
+                        
+        elif r.status_code == 401:
+            token = get_acess_token()
+            return wirelessUsers_data(token)
 
         elif r.status_code == 400:
-            pass
-            ## loggar para um ficheiro a dizer que a api parking deu erro para posterior investigação
-            ## a defenir
+            print("\n[wireless_users]: API response 400, skipped...")
+            return None
 
     return [{"Timestamp" : str(get_timestamp())}, number_users]
 
