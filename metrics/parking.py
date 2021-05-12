@@ -5,6 +5,11 @@ from .util import *
 
 
 def parking_data():
+    """
+    Returns data on response.status_code == 200
+    
+    returns None on response.status_code == 400
+    """
     r = requests.get("http://services.web.ua.pt/parques/parques")
     # print(r.json())
     if r.status_code == 200:
@@ -12,12 +17,11 @@ def parking_data():
         timestamp = parking.pop(0)
         parking = [{"Nome":park["Nome"], "Capacidade" : park["Capacidade"], "Ocupado" : park["Ocupado"], "Livre" : park["Livre"]} for park in parking]
         parking.insert(0, timestamp)
+        return parking
 
     elif r.status_code == 400:
-        pass
-        ## loggar para um ficheiro a dizer que a api parking deu erro para posterior investigação
-        ## a defenir
-    return parking
+        print("\n[parking]: API response 400, skipped...")
+        return None
 
 def parking_format_influx(parking):
     """gets a list of json like database entrys"""
