@@ -17,42 +17,43 @@ from metrics import wirelessUsers_data, wirelessUsers_format_influx
 def five_min_job(producer, influx):
     # parking data
     parking = parking_data()
-    if kafkaConnection() and not parking == None:
-        if producer == "":
-            producer = ProducerStart()
-        try:
-            producer.send("parking", value={"PARK" : parking})
-            # print("\nsended parking to kafka:")
-            # p.pprint({"PARK":parking})
-        except:
-            print("producer is bad, or not connected...")
-
-    # parking data influx formated
-    parking = parking_format_influx(parking)
-    parking = [park[0] for park in parking]
-    # print("\nsended parking to Influx!")
-    # p.pprint(parking)
-    influx.write_points(parking, database="Metrics")
+    if not parking == None:
+        if kafkaConnection():
+            if producer == "":
+                producer = ProducerStart()
+            try:
+                producer.send("parking", value={"PARK" : parking})
+                # print("\nsended parking to kafka:")
+                # p.pprint({"PARK":parking})
+            except:
+                print("producer is bad, or not connected...")
+        # parking data influx formated
+        parking = parking_format_influx(parking)
+        parking = [park[0] for park in parking]
+        # print("\nsended parking to Influx!")
+        # p.pprint(parking)
+        influx.write_points(parking, database="Metrics")
 
 def thirty_min_job(producer, influx, token):
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
-    if kafkaConnection() and not wireless_users == None:
-        if producer == "":
-            producer = ProducerStart()
-        try:
-            producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
-            # print("\nsended wirelessUseres to kafka:")
-            # p.pprint({"WIFIUSR" : wireless_users})
-        except:
-            print("producer is bad, or not connected...")
+    if not wireless_users == None:
+        if kafkaConnection():
+            if producer == "":
+                producer = ProducerStart()
+            try:
+                producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
+                # print("\nsended wirelessUseres to kafka:")
+                # p.pprint({"WIFIUSR" : wireless_users})
+            except:
+                print("producer is bad, or not connected...")
 
-    # wifiuseres data influx formated
-    wireless_users = wirelessUsers_format_influx(wireless_users)
-    wireless_users = [wire[0] for wire in wireless_users]
-    # print("\nsended wirelessUseres to Influx:")
-    # p.pprint(wireless_users)
-    influx.write_points(wireless_users, database="Metrics")
+        # wifiuseres data influx formated
+        wireless_users = wirelessUsers_format_influx(wireless_users)
+        wireless_users = [wire[0] for wire in wireless_users]
+        # print("\nsended wirelessUseres to Influx:")
+        # p.pprint(wireless_users)
+        influx.write_points(wireless_users, database="Metrics")
 
 def kafkaConnection():
     # test connection with kafka broker
@@ -86,7 +87,7 @@ def main():
         # start Kafka Python Client
         producer = ProducerStart()
     # start influxDBClient
-    influx = InfluxDBClient(host='127.0.0.1', port=8086, username="daemon", password="daemon_1234")
+    influx = InfluxDBClient(host='40.113.101.222', port=8086, username="daemon", password="daemon_1234")
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
     scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
