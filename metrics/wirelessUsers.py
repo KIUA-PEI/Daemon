@@ -1,5 +1,6 @@
 import requests
 import json
+import copy
 from .consts import *
 from .util import *
 
@@ -9,7 +10,7 @@ def wirelessUsers_data(token):
 
     returns None on response.status_code == 400
     """
-    number_users = WIFIUSERS
+    number_users = copy.deepcopy(WIFIUSERS)
     for i in range(8):
         r = requests.get('https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/AccessPoint?maxResult=1000&firstResult='+str(i*100), headers={'Authorization': token})
         
