@@ -23,15 +23,15 @@ def five_min_job(producer, influx):
                 producer = ProducerStart()
             try:
                 producer.send("parking", value={"PARK" : parking})
-                print("\nsended parking to kafka:")
-                p.pprint({"PARK":parking})
+                # print("\nsended parking to kafka:")
+                # p.pprint({"PARK":parking})
             except:
                 print("producer is bad, or not connected...")
         # parking data influx formated
         parking = parking_format_influx(parking)
         parking = [park[0] for park in parking]
-        print("\nsended parking to Influx!")
-        p.pprint(parking)
+        # print("\nsended parking to Influx!")
+        # p.pprint(parking)
         influx.write_points(parking, database="Metrics")
 
 def thirty_min_job(producer, influx, token):
@@ -43,16 +43,16 @@ def thirty_min_job(producer, influx, token):
                 producer = ProducerStart()
             try:
                 producer.send("wifiusr", value={"WIFIUSR" : wireless_users})
-                print("\nsended wirelessUseres to kafka:")
-                p.pprint({"WIFIUSR" : wireless_users})
+                # print("\nsended wirelessUseres to kafka:")
+                # p.pprint({"WIFIUSR" : wireless_users})
             except:
                 print("producer is bad, or not connected...")
 
         # wifiuseres data influx formated
         wireless_users = wirelessUsers_format_influx(wireless_users)
         wireless_users = [wire[0] for wire in wireless_users]
-        print("\nsended wirelessUseres to Influx:")
-        p.pprint(wireless_users)
+        # print("\nsended wirelessUseres to Influx:")
+        # p.pprint(wireless_users)
         influx.write_points(wireless_users, database="Metrics")
 
 def kafkaConnection():
