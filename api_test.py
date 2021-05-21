@@ -1,5 +1,6 @@
 import requests 
 import json
+import pprint as p
 #import pycurl
 #       Host: https://wso2-gw.ua.pt
 #       Context: /primecore_primecore-ws/1.0.0
@@ -129,6 +130,22 @@ def explore_access_points():
 
     print(highest_aps)
 
+def explore_Networkbuilding():
+    token = get_acess_token()
+    r = requests.get("https://wso2-gw.ua.pt/primecore_primecore-ws/1.0.0/NetworkMetric/DEM?metric=rx&timeInterval=24", headers={'Authorization': token})
+    if r.status_code == 200:
+        p.pprint(json.loads(r.text))
+
+    elif r.status_code == 400:
+        print("error NETBUILDING!")
+
+    elif r.status_code == 401:
+        print("outdated token!")
+    
+    elif r.status_code == 501:
+        print("erro 500: internal server error!")
+
+
     # lista de departamentos e máximo ap:
     # deti-ap23
     # biblioteca-ap26
@@ -160,7 +177,8 @@ def explore_access_points():
     #  'dep': 19, 'dlc': 15, 'isca': 16, 'ietta': 0}
 
 def main():
-    explore_access_points()
+    # explore_access_points()
+    explore_Networkbuilding()
     
 
 
