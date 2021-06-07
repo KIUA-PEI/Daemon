@@ -13,7 +13,7 @@ import pprint as p
 from util import get_token,get_timestamp
 
 
-def filter_request(vals,status):
+def filter_request(vals):
     result = []
     #print(vals)
     
@@ -43,14 +43,14 @@ def make_storage_request(url,token_url,key,secret,content_type=None,auth_type=No
     while count < 4:
         request = requests.get(url,headers={'Authorization': token},timeout=120)
         print(request.status_code)
+        print(request.json())
         if request.status_code==200:
             try:
-                result = []
-                for val in request.json():
-                    result = filter_request(val['Nodes'])
+                result = filter_request(request.json()['Nodes'])
                 return result
             except:
                 print("FILTER FAILED") 
+                break
         elif request.status_code == 401:
             token = get_token(token_url,key,secret,content_type,auth_type)
             print("UNAUTHORIZED")
