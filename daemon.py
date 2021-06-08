@@ -1,4 +1,4 @@
-from Daemon.metrics.send_dhcp_pool import make_dhcp_request
+from metrics.send_dhcp_pool import make_dhcp_request
 import time
 import json
 import socket
