@@ -1,3 +1,4 @@
+from Daemon.metrics.send_dhcp_pool import make_dhcp_request
 import time
 import json
 import socket
@@ -12,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from metrics import get_acess_token
 from metrics import parking_data, parking_format_influx
 from metrics import wirelessUsers_data, wirelessUsers_format_influx
+from metrics import make_dhcp_request, make_website_request, make_storage_request
 
 # jobs
 def five_min_job(producer, influx):
@@ -37,7 +39,7 @@ def five_min_job(producer, influx):
 def thirty_min_job(producer, influx, token):
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
-    if not wireless_users == None:
+    if wireless_users == None:
         if kafkaConnection():
             if producer == "":
                 producer = ProducerStart()
@@ -55,6 +57,79 @@ def thirty_min_job(producer, influx, token):
         # p.pprint(wireless_users)
         influx.write_points(wireless_users, database="Metrics")
 
+def daily_job(producer,influx):
+    url = 'https://wso2-gw.ua.pt/scom/v1.0/DHCP/Pools?days=1&hours=24'
+    token_url = 'https://wso2-gw.ua.pt/token?grant_type=client_credentials&state=123&scope=openid'
+    secret = 'BrszH8oF9QsHRjiOAC1D9Ze0Iloa'
+    auth_type = 'Bearer'
+    content_type = 'application/x-www-form-urlencoded'
+    key = 'j_mGndxK2WLKEUKbGrkX7n1uxAEa'
+    try:
+        # val -> [name,status,value]
+        result_request = make_dhcp_request(url,token_url,key,secret,content_type,auth_type)
+        """
+        if kafkaConnection():
+            if producer == "":
+                producer = ProducerStart()
+            try:
+                producer.send("dhcp_request",value={"dhcp_request":result_request})
+            except:
+                print("dhcp producer bad")
+        """
+    except:
+        print('DHCP REQUEST FAILED')
+    
+    try:
+        influx.write_points(result_request, database="Metrics")
+    except:
+        print('dhcp influx failed')
+    
+    url = 'https://wso2-gw.ua.pt/scom/v1.0/WebSites/Metrics?days=1&hours=24'
+    
+    try:
+        # val -> [name,status,value]
+        result_request = make_website_request(url,token_url,key,secret,content_type,auth_type)
+        """
+        if kafkaConnection():
+            if producer == "":
+                producer = ProducerStart()
+            try:
+                producer.send("website_request",value={"website_request":result_request})
+            except:
+                print("website producer bad")
+        """
+    except:
+        print('WEBSITE REQUEST FAILED')
+    
+    try:
+        influx.write_points(result_request, database="Metrics")
+    except:
+        print('website influx failed')
+    
+    url = 'https://wso2-gw.ua.pt/scom/v1.0/Storage'
+    
+    try:
+        # val -> [name,status,value]
+        result_request = make_storage_request(url,token_url,key,secret,content_type,auth_type)
+        """
+        if kafkaConnection():
+            if producer == "":
+                producer = ProducerStart()
+            try:
+                producer.send("storage_request",value={"storage_request":result_request})
+            except:
+                print("storage producer bad")
+        """
+    except:
+        print('STORAGE REQUEST FAILED')
+    
+    try:
+        influx.write_points(result_request, database="Metrics")
+    except:
+        print('STORAGE influx failed')
+    
+    
+    
 def kafkaConnection():
     # test connection with kafka broker
     conn = BrokerConnection("13.69.49.187", 9092, socket.AF_INET)
@@ -87,10 +162,11 @@ def main():
         # start Kafka Python Client
         producer = ProducerStart()
     # start influxDBClient
-    influx = InfluxDBClient(host='40.68.96.164', port=8086, username="peikpis", password="peikpis_2021")
+    influx = InfluxDBClient(host='127.0.0.1', port=8086, username="daemon", password="daemon_1234")
     # add jobs
     scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
     scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
+    scheduler.add_job(daily_job, trigger="interval", args=[producer, influx], minutes=1440, id="dailyjob_basic", next_run_time=datetime.now())
     # scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
     # start the scheduler
     scheduler.start()
