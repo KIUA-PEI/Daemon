@@ -173,8 +173,8 @@ def main():
     # start influxDBClient
     influx = InfluxDBClient(host='40.68.96.164', port=8086, username="peikpis", password="peikpis_2021")
     # add jobs
-    #scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
-    #scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
+    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
+    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
     
     scheduler.add_job(daily_job, trigger="interval", args=[producer, influx], days=1, id="dailyjob_basic", next_run_time=datetime.now())
     
