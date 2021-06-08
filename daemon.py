@@ -64,6 +64,7 @@ def daily_job(producer,influx):
     auth_type = 'Bearer'
     content_type = 'application/x-www-form-urlencoded'
     key = 'j_mGndxK2WLKEUKbGrkX7n1uxAEa'
+    
     try:
         # val -> [name,status,value]
         result_request = make_dhcp_request(url,token_url,key,secret,content_type,auth_type)
@@ -76,14 +77,16 @@ def daily_job(producer,influx):
             except:
                 print("dhcp producer bad")
         """
+        try:
+            influx.write_points(result_request, database="Test")
+        except:
+            print('dhcp influx failed')
+            
+        for row in result_request:
+            print(row)
     except:
         print('DHCP REQUEST FAILED')
-    
-    try:
-        influx.write_points(result_request, database="Metrics")
-    except:
-        print('dhcp influx failed')
-    
+
     url = 'https://wso2-gw.ua.pt/scom/v1.0/WebSites/Metrics?days=1&hours=24'
     
     try:
@@ -98,19 +101,21 @@ def daily_job(producer,influx):
             except:
                 print("website producer bad")
         """
+        try:
+            influx.write_points(result_request, database="Test")
+        except:
+            print('website influx failed')
+        for row in result_request:
+            print(row)
     except:
         print('WEBSITE REQUEST FAILED')
-    
-    try:
-        influx.write_points(result_request, database="Metrics")
-    except:
-        print('website influx failed')
     
     url = 'https://wso2-gw.ua.pt/scom/v1.0/Storage'
     
     try:
         # val -> [name,status,value]
         result_request = make_storage_request(url,token_url,key,secret,content_type,auth_type)
+        print(result_request)
         """
         if kafkaConnection():
             if producer == "":
@@ -120,13 +125,17 @@ def daily_job(producer,influx):
             except:
                 print("storage producer bad")
         """
+        try:
+            influx.write_points(result_request, database="Test")
+        except:
+            print('STORAGE influx failed')
     except:
         print('STORAGE REQUEST FAILED')
+
+    for row in result_request:
+        print(row)
+
     
-    try:
-        influx.write_points(result_request, database="Metrics")
-    except:
-        print('STORAGE influx failed')
     
     
     
@@ -162,11 +171,13 @@ def main():
         # start Kafka Python Client
         producer = ProducerStart()
     # start influxDBClient
-    influx = InfluxDBClient(host='127.0.0.1', port=8086, username="daemon", password="daemon_1234")
+    influx = InfluxDBClient(host='40.68.96.164', port=8086, username="peikpis", password="peikpis_2021")
     # add jobs
-    scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
-    scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
-    scheduler.add_job(daily_job, trigger="interval", args=[producer, influx], minutes=1440, id="dailyjob_basic", next_run_time=datetime.now())
+    #scheduler.add_job(five_min_job, trigger="interval", args=[producer, influx], minutes=5, id="5minjob", next_run_time=datetime.now())
+    #scheduler.add_job(thirty_min_job, trigger="interval", args=[producer, influx, token], minutes=30, id="30minjob", next_run_time=datetime.now())
+    
+    scheduler.add_job(daily_job, trigger="interval", args=[producer, influx], days=1, id="dailyjob_basic", next_run_time=datetime.now())
+    
     # scheduler.add_job(seven_day_job, trigger="interval", args=[influx, token], days=7, id="seven_day_job", next_run_time=datetime.now())
     # start the scheduler
     scheduler.start()
