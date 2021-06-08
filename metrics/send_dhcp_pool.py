@@ -13,7 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import socket
 import pprint as p
-from util import get_token
+from .util import *
 
 
 #def dhcp_format_influx(val):
@@ -78,9 +78,9 @@ def main():
     key = 'j_mGndxK2WLKEUKbGrkX7n1uxAEa'
 
     result = make_dhcp_request(url,token_url,key,secret,content_type,auth_type)
-    for val in result:
-        print(val)
-    pass
+    # for val in result:
+    #     # print(val)
+    # pass
 
 
 if __name__=="__main__":

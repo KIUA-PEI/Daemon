@@ -1,4 +1,3 @@
-from metrics.send_dhcp_pool import make_dhcp_request
 import time
 import json
 import socket
@@ -131,9 +130,6 @@ def daily_job(producer,influx):
             print('STORAGE influx failed')
     except:
         print('STORAGE REQUEST FAILED')
-
-    for row in result_request:
-        print(row)
 
     
     

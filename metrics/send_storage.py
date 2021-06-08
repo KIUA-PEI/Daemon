@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import socket
 import pprint as p
-from util import get_token,get_timestamp
+from .util import *
 
 
 def filter_request(vals):
@@ -19,7 +19,7 @@ def filter_request(vals):
     
     for node in vals:
         #name = node['InstanceName']
-        print(node)
+        # print(node)
         result.append({"time":get_timestamp(),"measurement":"Node_Storage","tags":node['NodeName'],"fields":node['BytesUsed']})
     
     return result 
@@ -42,8 +42,8 @@ def make_storage_request(url,token_url,key,secret,content_type=None,auth_type=No
     count = 0
     while count < 4:
         request = requests.get(url,headers={'Authorization': token},timeout=120)
-        print(request.status_code)
-        print(request.json())
+        # print(request.status_code)
+        # print(request.json())
         if request.status_code==200:
             try:
                 result = filter_request(request.json()['Nodes'])

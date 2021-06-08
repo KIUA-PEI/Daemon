@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import time
 import socket
 import pprint as p
-from util import get_token
+from .util import *
 
 
 def filter_request(vals,status):
@@ -21,7 +21,7 @@ def filter_request(vals,status):
         name = metric['InstanceName']
         #print(metric)
         for value in metric['Values']:
-            print(name,status,value,metric['Values'][value])
+            # print(name,status,value,metric['Values'][value])
             result.append({"time":value,"measurement":"dhcp_pool","tags":name,"fields":metric['Values'][value]})
     return result 
 
@@ -43,7 +43,7 @@ def make_website_request(url,token_url,key,secret,content_type=None,auth_type=No
     count = 0
     while count < 4:
         request = requests.get(url,headers={'Authorization': token},timeout=120)
-        print(request.status_code)
+        # print(request.status_code)
         if request.status_code==200:
             try:
                 result = []
