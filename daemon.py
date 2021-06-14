@@ -18,7 +18,7 @@ from metrics import make_dhcp_request, make_website_request, make_storage_reques
 def five_min_job(producer, influx):
     # parking data
     parking = parking_data()
-    if not parking == None:
+    if parking:
         if kafkaConnection():
             if producer == "":
                 producer = ProducerStart()
@@ -38,7 +38,7 @@ def five_min_job(producer, influx):
 def thirty_min_job(producer, influx, token):
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
-    if wireless_users == None:
+    if wireless_users:
         if kafkaConnection():
             if producer == "":
                 producer = ProducerStart()
