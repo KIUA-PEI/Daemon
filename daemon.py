@@ -33,8 +33,10 @@ def five_min_job(producer, influx):
         parking = [park[0] for park in parking]
         # print("\nsended parking to Influx!")
         # p.pprint(parking)
-        influx.write_points(parking, database="Metrics")
-
+        try:
+            influx.write_points(parking, database="Metrics")
+        except:
+            print('storage influx failed')
 def thirty_min_job(producer, influx, token):
     # number of wireless users data
     wireless_users = wirelessUsers_data(token)
@@ -54,8 +56,10 @@ def thirty_min_job(producer, influx, token):
         wireless_users = [wire[0] for wire in wireless_users]
         # print("\nsended wirelessUseres to Influx:")
         # p.pprint(wireless_users)
-        influx.write_points(wireless_users, database="Metrics")
-
+        try:
+            influx.write_points(wireless_users, database="Metrics")
+        except:
+            print('wireless influx failed')
 def daily_job(producer,influx):
     url = 'https://wso2-gw.ua.pt/scom/v1.0/DHCP/Pools?days=1&hours=24'
     token_url = 'https://wso2-gw.ua.pt/token?grant_type=client_credentials&state=123&scope=openid'
@@ -77,15 +81,15 @@ def daily_job(producer,influx):
                 print("dhcp producer bad")
         """
         try:
+            print('sending dhcp')
             influx.write_points(result_request, database="Metrics")
+            print('sended dhcp')
         except:
             print('dhcp influx failed')
-            
-        for row in result_request:
-            print(row)
     except:
         print('DHCP REQUEST FAILED')
-
+    
+    
     url = 'https://wso2-gw.ua.pt/scom/v1.0/WebSites/Metrics?days=1&hours=24'
     
     try:
@@ -101,11 +105,11 @@ def daily_job(producer,influx):
                 print("website producer bad")
         """
         try:
+            print('sending website')
             influx.write_points(result_request, database="Metrics")
+            print('sended dhcp')
         except:
             print('website influx failed')
-        for row in result_request:
-            print(row)
     except:
         print('WEBSITE REQUEST FAILED')
     
@@ -125,12 +129,14 @@ def daily_job(producer,influx):
                 print("storage producer bad")
         """
         try:
+            print('sendings storage')
             influx.write_points(result_request, database="Metrics")
+            print('sended storage')
         except:
             print('STORAGE influx failed')
     except:
         print('STORAGE REQUEST FAILED')
-
+   
     
     
     
