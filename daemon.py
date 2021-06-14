@@ -77,7 +77,7 @@ def daily_job(producer,influx):
                 print("dhcp producer bad")
         """
         try:
-            influx.write_points(result_request, database="Test")
+            influx.write_points(result_request, database="Metrics")
         except:
             print('dhcp influx failed')
             
@@ -101,7 +101,7 @@ def daily_job(producer,influx):
                 print("website producer bad")
         """
         try:
-            influx.write_points(result_request, database="Test")
+            influx.write_points(result_request, database="Metrics")
         except:
             print('website influx failed')
         for row in result_request:
@@ -125,7 +125,7 @@ def daily_job(producer,influx):
                 print("storage producer bad")
         """
         try:
-            influx.write_points(result_request, database="Test")
+            influx.write_points(result_request, database="Metrics")
         except:
             print('STORAGE influx failed')
     except:
