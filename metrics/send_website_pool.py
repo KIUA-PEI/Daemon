@@ -14,15 +14,11 @@ from .util import *
 
 
 def filter_request(vals,status):
-    result = []
-    #print(vals)
-    
+    result = []    
     for metric in vals:
         name = metric['InstanceName']
-        #print(metric)
         for value in metric['Values']:
-            # print(name,status,value,metric['Values'][value])
-            result.append({"time":value,"measurement":"dhcp_pool","tags":name,"fields":metric['Values'][value]})
+            result.append({"time":value,"measurement":"website_pool","tags":{"Nome":name},"fields":{"count":metric['Values'][value]}})
     return result 
 
 # days = 1 ... hours = 24

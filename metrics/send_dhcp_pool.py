@@ -25,13 +25,10 @@ from .util import *
 
 def filter_request(vals,status):
     result = []
-    #print(vals)
     for metric in vals:
         name = metric['InstanceName']
-        #print(metric)
         for value in metric['Values']:
-            #print(name,status,value,metric['Values'][value])
-            result.append({"time":value,"measurement":"dhcp_pool","tags":name,"fields":metric['Values'][value]})
+            result.append({"time":value,"measurement":"dhcp_pool","tags":{"Nome":name},"fields":{"count":metric['Values'][value]}})
     return result 
 
 def make_dhcp_request(url,token_url,key,secret,content_type=None,auth_type=None):
@@ -51,8 +48,6 @@ def make_dhcp_request(url,token_url,key,secret,content_type=None,auth_type=None)
     while count < 4:
         request = requests.get(url,headers={'Authorization': token},timeout=120)
         if request.status_code<=200:
-            for row in request.json():
-                print(row)
             try:
                 result = []
                 for val in request.json():

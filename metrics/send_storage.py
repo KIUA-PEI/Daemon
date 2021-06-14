@@ -15,13 +15,8 @@ from .util import *
 
 def filter_request(vals):
     result = []
-    #print(vals)
-    
     for node in vals:
-        #name = node['InstanceName']
-        # print(node)
-        result.append({"time":get_timestamp(),"measurement":"Node_Storage","tags":node['NodeName'],"fields":node['BytesUsed']})
-    
+        result.append({"time":get_timestamp(),"measurement":"Node_Storage","tags":{"Nome":node['NodeName']},"fields":{'BytesUsed':node['BytesUsed']}})
     return result 
 
 # days = 1 ... hours = 24
